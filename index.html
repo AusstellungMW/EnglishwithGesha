@@ -80,25 +80,19 @@
     p{ margin: 0 0 16px 0; }
     p:last-child{ margin-bottom: 0; }
 
-    .phrase{
-      display:inline;
-      padding: 2px 6px;
-      border-radius: 10px;
-      cursor: pointer;
-      outline: none;
-      -webkit-tap-highlight-color: transparent;
-      transition: background 120ms ease;
-    }
+    .word{
+  display:inline-block;          /* важно: отдельная “кнопка” */
+  padding: 2px 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease;
+}
 
-    .phrase:hover,
-    .phrase.is-active{
-      background: var(--accent);
-    }
-
-    .phrase:focus-visible{
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.18);
-      background: var(--accent2);
-    }
+.word:hover,
+.word.is-active{
+  background: rgba(255,255,255,0.10);
+}
 
     .hint{
       margin-top: 18px;
@@ -337,98 +331,88 @@
   <div id="tooltip" role="tooltip" aria-hidden="true"></div>
 
   <script>
-    const tooltip = document.getElementById("tooltip");
-    const phrases = Array.from(document.querySelectorAll(".phrase"));
-    const PAD = 14;          // отступ от краёв экрана
-    const GAP = 12;          // зазор между фразой и облаком
-    const ARROW_PAD = 18;    // хвостик не ближе этого к краю облака
+  const tooltip = document.getElementById("tooltip");
+  const PAD = 14, GAP = 12, ARROW_PAD = 18;
 
-    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
-    function hideTooltip(){
-      tooltip.classList.remove("show", "pos-top", "pos-bottom");
-      tooltip.setAttribute("aria-hidden", "true");
-      phrases.forEach(p => p.classList.remove("is-active"));
+  function hideTooltip(){
+    tooltip.classList.remove("show", "pos-top", "pos-bottom");
+    tooltip.setAttribute("aria-hidden", "true");
+    document.querySelectorAll(".word.is-active").forEach(w => w.classList.remove("is-active"));
+  }
+
+  function showTooltipFor(el){
+    const text = el.getAttribute("data-ru") || "";
+    if (!text.trim()) return;
+
+    tooltip.textContent = text;
+    tooltip.classList.add("show");
+    tooltip.setAttribute("aria-hidden", "false");
+
+    const r = el.getBoundingClientRect();
+    const tw = tooltip.offsetWidth;
+    const th = tooltip.offsetHeight;
+
+    const spaceAbove = r.top;
+    const spaceBelow = window.innerHeight - r.bottom;
+    let place = "top";
+    if (spaceAbove < th + GAP + PAD && spaceBelow > spaceAbove) place = "bottom";
+
+    tooltip.classList.remove("pos-top", "pos-bottom");
+    tooltip.classList.add(place === "top" ? "pos-top" : "pos-bottom");
+
+    let x = r.left + (r.width / 2) - (tw / 2);
+    x = clamp(x, PAD, window.innerWidth - tw - PAD);
+
+    let y = (place === "top") ? (r.top - th - GAP) : (r.bottom + GAP);
+    y = clamp(y, PAD, window.innerHeight - th - PAD);
+
+    tooltip.style.left = x + "px";
+    tooltip.style.top  = y + "px";
+
+    const targetX = r.left + r.width / 2;
+    let arrowLeft = targetX - x;
+    arrowLeft = clamp(arrowLeft, ARROW_PAD, tw - ARROW_PAD);
+    tooltip.style.setProperty("--arrow-left", arrowLeft + "px");
+  }
+
+  // IMPORTANT: показываем подсказку только по конкретному слову (".word")
+  document.addEventListener("pointerover", (e) => {
+    const w = e.target.closest(".word");
+    if (!w) return;
+    showTooltipFor(w);
+  });
+
+  document.addEventListener("pointerout", (e) => {
+    // если уходим с .word на что-то другое — скрываем
+    const fromWord = e.target.closest(".word");
+    const toWord = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(".word") : null;
+    if (fromWord && !toWord) hideTooltip();
+  });
+
+  // Tap/click: фиксируем слово (для телефона)
+  document.addEventListener("click", (e) => {
+    const w = e.target.closest(".word");
+    if (!w) { hideTooltip(); return; }
+
+    const isActive = w.classList.contains("is-active");
+    hideTooltip();
+    if (!isActive){
+      w.classList.add("is-active");
+      showTooltipFor(w);
     }
+    e.stopPropagation();
+  });
 
-    function showTooltipFor(el){
-      const text = el.getAttribute("data-ru") || "";
-      if (!text.trim()) return;
+  window.addEventListener("scroll", () => {
+    if (tooltip.classList.contains("show")) hideTooltip();
+  }, {passive:true});
 
-      tooltip.textContent = text;
-      tooltip.classList.add("show");
-      tooltip.setAttribute("aria-hidden", "false");
+  window.addEventListener("resize", () => {
+    if (tooltip.classList.contains("show")) hideTooltip();
+  });
+</script>
 
-      // измеряем
-      const r = el.getBoundingClientRect();
-      const tw = tooltip.offsetWidth;
-      const th = tooltip.offsetHeight;
-
-      // предпочитаем сверху, но если места нет, уйдём вниз
-      const spaceAbove = r.top;
-      const spaceBelow = window.innerHeight - r.bottom;
-
-      let place = "top";
-      if (spaceAbove < th + GAP + PAD && spaceBelow > spaceAbove) place = "bottom";
-
-      tooltip.classList.remove("pos-top", "pos-bottom");
-      tooltip.classList.add(place === "top" ? "pos-top" : "pos-bottom");
-
-      // позиционирование X: по центру фразы, но не вылезать за экран
-      let x = r.left + (r.width / 2) - (tw / 2);
-      x = clamp(x, PAD, window.innerWidth - tw - PAD);
-
-      // позиционирование Y: сверху или снизу
-      let y;
-      if (place === "top"){
-        y = r.top - th - GAP;
-        if (y < PAD) y = PAD; // на всякий
-      } else {
-        y = r.bottom + GAP;
-        if (y + th > window.innerHeight - PAD) y = window.innerHeight - th - PAD;
-      }
-
-      tooltip.style.left = x + "px";
-      tooltip.style.top  = y + "px";
-
-      // хвостик: вычислим положение относительно облака,
-      // чтобы он указывал на центр фразы и не уходил за край
-      const targetX = r.left + r.width / 2; // где находится фраза в окне
-      let arrowLeft = targetX - x;          // где это внутри облака
-      arrowLeft = clamp(arrowLeft, ARROW_PAD, tw - ARROW_PAD);
-      tooltip.style.setProperty("--arrow-left", arrowLeft + "px");
-    }
-
-    // PC hover
-    phrases.forEach(el => {
-      el.addEventListener("mouseenter", () => showTooltipFor(el));
-      el.addEventListener("mousemove",  () => showTooltipFor(el));
-      el.addEventListener("mouseleave", () => hideTooltip());
-    });
-
-    // Tap / click
-    phrases.forEach(el => {
-      el.addEventListener("click", (e) => {
-        const isActive = el.classList.contains("is-active");
-        hideTooltip();
-        if (!isActive){
-          el.classList.add("is-active");
-          showTooltipFor(el);
-        }
-        e.stopPropagation();
-      });
-    });
-
-    document.addEventListener("click", () => hideTooltip());
-
-    // При скролле и ресайзе лучше закрывать, чтобы не “плавало”
-    window.addEventListener("scroll", () => {
-      if (tooltip.classList.contains("show")) hideTooltip();
-    }, {passive:true});
-
-    window.addEventListener("resize", () => {
-      if (tooltip.classList.contains("show")) hideTooltip();
-    });
-  </script>
 </body>
 </html>
