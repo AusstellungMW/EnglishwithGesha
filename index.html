@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>English Text with Russian Tooltips</title>
+  <style>
+    :root{
+      --bg:#000;
+      --fg:#fff;
+      --bubble-bg: rgba(255,255,255,0.95);
+      --bubble-fg:#000;
+      --bubble-shadow: 0 10px 26px rgba(0,0,0,0.65);
+      --radius: 14px;
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 44px 22px 70px;
+    }
+
+    h1{
+      font-size: 22px;
+      font-weight: 600;
+      opacity: 0.85;
+      margin: 0 0 18px 0;
+      letter-spacing: 0.3px;
+    }
+
+    .text{
+      font-size: 34px;          /* крупный шрифт */
+      line-height: 1.65;
+      letter-spacing: 0.2px;
+    }
+
+    .phrase{
+      position: relative;
+      display: inline;
+      padding: 2px 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* лёгкая подсветка при наведении/активации */
+    .phrase:hover,
+    .phrase.is-active{
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* облачко (по умолчанию скрыто) */
+    .phrase::after{
+      content: attr(data-ru);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      background: var(--bubble-bg);
+      color: var(--bubble-fg);
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      font-size: 18px;
+      line-height: 1.35;
+      box-shadow: var(--bubble-shadow);
+      white-space: normal;
+      width: max-content;
+      max-width: min(560px, 92vw);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+      z-index: 50;
+    }
+
+    /* маленький “хвостик” */
+    .phrase::before{
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 2px);
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: var(--bubble-bg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+      z-index: 50;
+    }
+
+    /* ПК hover */
+    .phrase:hover::after,
+    .phrase:hover::before{
+      opacity: 1;
+    }
+
+    /* Телефон: класс is-active */
+    .phrase.is-active::after,
+    .phrase.is-active::before{
+      opacity: 1;
+    }
+
+    /* на очень маленьких экранах чуть уменьшить текст */
+    @media (max-width: 520px){
+      .text{ font-size: 28px; }
+    }
+
+    /* чуть отделим параграфы */
+    p{
+      margin: 0 0 18px 0;
+    }
+
+    .hint{
+      margin-top: 26px;
+      font-size: 16px;
+      opacity: 0.75;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Tap or hover a sentence to see the Russian translation</h1>
+
+    <div class="text">
+      <p>
+        <span class="phrase" data-ru="Мы живем в двенадцатиэтажном здании в центральной части города.">
+          We live in a 12-story building in the central part of the city.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Позвольте мне рассказать про нашу квартиру.">
+          Let me tell you about our apartment.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Мы живем на втором этаже, поэтому обычно не пользуемся лифтом.">
+          We live on the second floor, so usually we do not use the elevator.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="В квартире четыре комнаты — комната моих родителей, комната моего младшего брата, комната, где я живу, и гостиная.">
+          There are four rooms in the apartment – my parents’ room, my little brother’s room, the room where I live, and the living room.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="А также, конечно, уютная кухня и ванная.">
+          There are also, of course, a cozy kitchen and a bathroom.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Кухня — маленькая, но, как я сказал ранее, довольно уютная.">
+          The kitchen is small, but, as I said before, quite cozy.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Там есть плита, холодильник, чайник, микроволновая печь, стол и стулья.">
+          There is a stove, fridge, kettle, microwave, table and chairs there.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="У нас также есть много кухонных принадлежностей вроде ножей, черпаков и так далее.">
+          We also have a lot of kitchen utensils such as knives, ladles and so on.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="На стене висит портрет моей мамы.">
+          There is my mom’s portrait hanging on the wall.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Портрет очень хороший, мой отец нарисовал его много лет назад, когда они познакомились.">
+          The portrait is very good, my father drew it many years ago when they met.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Самая большая комната в квартире — это гостиная.">
+          The biggest room in the apartment is the living room.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Там мы смотрим телевизор по вечерам, мой младший братик играет там в видеоигры.">
+          This is where we watch TV in the evening, my little brother plays videogames there.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Комната родителей тоже большая, у них есть свой телевизор.">
+          My parents’ room is also big, and they have their own TV.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Если мой брат или я хотим посмотреть что-то, что они не смотрят, они могут позволить нам воспользоваться телевизором в гостиной, а сами будут смотреть свой любимый сериал у себя в комнате.">
+          If my brother or I want to watch something they do not watch, they might let us use the living room TV and watch their favorite show in their room.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Им нравятся детективы про полицию, мне нравятся фэнтези-сериалы, а моему брату — мультики.">
+          They love police procedurals, I like fantasy series, and my brother likes cartoons.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="У моего брата маленькая комната.">
+          My brother has a small room.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Там есть шкаф, полный игрушек и Лего.">
+          There is a big closet full of toys and Lego there.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Моя комната тоже небольшая, у меня есть компьютерный стол.">
+          My room is not big either, I have a computer desk.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Там я делаю уроки.">
+          This is where I do my homework.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Что касается ванной, то там не просто туалет и ванна, там еще есть кошачий лоток.">
+          As for the bathroom, there is not just a toilet and bathtub, there is also a cat litter box there.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="У нас есть кошка, ее зовут Лили, и у нее нет комнаты, потому что вся квартира — это ее комната.">
+          We have a cat, her name is Lilly, and she does not have a room, because the whole apartment is her room.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Мы живем в этой квартире с тех пор, как я был маленьким, и мне она очень нравится.">
+          We’ve been living in this apartment since I was little, and I really like it.
+        </span>
+      </p>
+
+      <p>
+        <span class="phrase" data-ru="Когда я перееду отсюда когда-нибудь, надеюсь, что я буду жить в квартире похожей на эту.">
+          When I move out someday, I hope I will live in an apartment like this one.
+        </span>
+      </p>
+
+      <div class="hint">
+        Tip: On phone, tap a sentence. Tap anywhere else to hide the translation.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Для телефонов: показываем перевод по тапу (добавляем/убираем класс is-active)
+    // И закрываем, если тапнули в любое место вне фразы.
+    const phrases = Array.from(document.querySelectorAll(".phrase"));
+
+    function deactivateAll() {
+      phrases.forEach(p => p.classList.remove("is-active"));
+    }
+
+    phrases.forEach(p => {
+      p.addEventListener("touchstart", (e) => {
+        // предотвращаем “скролл-тап” конфликт, но не ломаем прокрутку:
+        // только управляем активным элементом
+        const alreadyActive = p.classList.contains("is-active");
+        deactivateAll();
+        if (!alreadyActive) p.classList.add("is-active");
+      }, {passive:true});
+
+      p.addEventListener("click", (e) => {
+        // На тач-ноутах/планшетах click тоже бывает
+        const alreadyActive = p.classList.contains("is-active");
+        deactivateAll();
+        if (!alreadyActive) p.classList.add("is-active");
+        e.stopPropagation();
+      });
+    });
+
+    document.addEventListener("click", () => deactivateAll());
+    document.addEventListener("touchstart", (e) => {
+      // если тапнули не по фразе, закрываем
+      if (!e.target.classList.contains("phrase")) deactivateAll();
+    }, {passive:true});
+  </script>
+</body>
+</html>
