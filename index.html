@@ -80,8 +80,8 @@
     p{ margin: 0 0 16px 0; }
     p:last-child{ margin-bottom: 0; }
 
-    .word{
-  display:inline-block;          /* важно: отдельная “кнопка” */
+ .phrase{
+  display:inline-block;          /* отдельный “токен” */
   padding: 2px 6px;
   border-radius: 10px;
   cursor: pointer;
@@ -89,8 +89,8 @@
   transition: background 120ms ease;
 }
 
-.word:hover,
-.word.is-active{
+.phrase:hover,
+.phrase.is-active{
   background: rgba(255,255,255,0.10);
 }
 
@@ -349,7 +349,7 @@
   function hideTooltip(){
     tooltip.classList.remove("show", "pos-top", "pos-bottom");
     tooltip.setAttribute("aria-hidden", "true");
-    document.querySelectorAll(".word.is-active").forEach(w => w.classList.remove("is-active"));
+    document.querySelectorAll(".phrase.is-active").forEach(w => w.classList.remove("is-active"));
   }
 
   function showTooltipFor(el){
@@ -366,6 +366,7 @@
 
     const spaceAbove = r.top;
     const spaceBelow = window.innerHeight - r.bottom;
+
     let place = "top";
     if (spaceAbove < th + GAP + PAD && spaceBelow > spaceAbove) place = "bottom";
 
@@ -387,30 +388,29 @@
     tooltip.style.setProperty("--arrow-left", arrowLeft + "px");
   }
 
-  // IMPORTANT: показываем подсказку только по конкретному слову (".word")
+  // Hover / pen / mouse
   document.addEventListener("pointerover", (e) => {
-    const w = e.target.closest(".word");
-    if (!w) return;
-    showTooltipFor(w);
+    const el = e.target.closest(".phrase");
+    if (!el) return;
+    showTooltipFor(el);
   });
 
   document.addEventListener("pointerout", (e) => {
-    // если уходим с .word на что-то другое — скрываем
-    const fromWord = e.target.closest(".word");
-    const toWord = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(".word") : null;
-    if (fromWord && !toWord) hideTooltip();
+    const from = e.target.closest(".phrase");
+    const to = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(".phrase") : null;
+    if (from && !to) hideTooltip();
   });
 
-  // Tap/click: фиксируем слово (для телефона)
+  // Tap/click (mobile)
   document.addEventListener("click", (e) => {
-    const w = e.target.closest(".word");
-    if (!w) { hideTooltip(); return; }
+    const el = e.target.closest(".phrase");
+    if (!el) { hideTooltip(); return; }
 
-    const isActive = w.classList.contains("is-active");
+    const isActive = el.classList.contains("is-active");
     hideTooltip();
     if (!isActive){
-      w.classList.add("is-active");
-      showTooltipFor(w);
+      el.classList.add("is-active");
+      showTooltipFor(el);
     }
     e.stopPropagation();
   });
