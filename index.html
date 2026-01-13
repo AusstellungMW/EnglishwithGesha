@@ -4,24 +4,34 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EN text with RU tooltip</title>
+
   <style>
     :root{
-      --bg:#000;
-      --fg:#fff;
-      --maxw: 980px;
+      --bg:#0b0c10;
+      --fg:#f3f4f6;
+      --muted: rgba(243,244,246,0.72);
+      --maxw: 920px;
 
-      --bubble-bg: rgba(255,255,255,0.95);
-      --bubble-fg:#000;
-      --bubble-shadow: 0 10px 26px rgba(0,0,0,0.65);
-      --bubble-radius: 14px;
+      --accent: rgba(255,255,255,0.10);
+      --accent2: rgba(255,255,255,0.14);
+
+      --bubble-bg: rgba(255,255,255,0.96);
+      --bubble-fg:#0b0c10;
+      --bubble-shadow: 0 14px 34px rgba(0,0,0,0.55);
+      --bubble-radius: 16px;
+
+      --pad: 14px;
     }
 
-    html, body { height: 100%; }
+    html, body{ height: 100%; }
     body{
       margin:0;
-      background:var(--bg);
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(255,255,255,0.06), transparent 60%),
+                  radial-gradient(900px 700px at 90% 10%, rgba(255,255,255,0.04), transparent 55%),
+                  var(--bg);
       color:var(--fg);
-      font-family: "Segoe UI", Arial, sans-serif;
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      text-rendering: optimizeLegibility;
     }
 
     .wrap{
@@ -30,64 +40,96 @@
       padding: 44px 22px 70px;
     }
 
+    header{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
     h1{
-      margin: 0 0 18px 0;
-      font-size: 20px;
-      font-weight: 600;
-      opacity: 0.85;
-      letter-spacing: 0.2px;
+      margin:0;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: 0.3px;
+      opacity: 0.92;
+    }
+
+    .sub{
+      margin:0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .card{
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      padding: 26px 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
     }
 
     .text{
-      font-size: 34px;
-      line-height: 1.65;
-      letter-spacing: 0.2px;
+      font-size: 22px;     /* меньше, чем было */
+      line-height: 1.75;
+      letter-spacing: 0.15px;
     }
 
-    p{ margin: 0 0 18px 0; }
+    p{ margin: 0 0 16px 0; }
+    p:last-child{ margin-bottom: 0; }
 
     .phrase{
       display:inline;
       padding: 2px 6px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
       outline: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 120ms ease;
     }
 
     .phrase:hover,
     .phrase.is-active{
-      background: rgba(255,255,255,0.10);
+      background: var(--accent);
     }
 
-    @media (max-width: 520px){
-      .text{ font-size: 28px; }
+    .phrase:focus-visible{
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.18);
+      background: var(--accent2);
     }
 
     .hint{
-      margin-top: 26px;
-      font-size: 16px;
-      opacity: 0.70;
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
     }
 
-    /* Реальное облачко */
+    @media (max-width: 520px){
+      .text{ font-size: 20px; }
+      .card{ padding: 22px 16px; }
+    }
+
+    /* Tooltip */
     #tooltip{
-      position: fixed; /* важно: стабильно при скролле */
+      position: fixed;
       left: 0;
       top: 0;
-      max-width: min(560px, 92vw);
+      max-width: min(560px, calc(100vw - 2*var(--pad)));
       background: var(--bubble-bg);
       color: var(--bubble-fg);
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-radius: var(--bubble-radius);
       box-shadow: var(--bubble-shadow);
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1.35;
       z-index: 9999;
+
       opacity: 0;
       transform: translateY(6px);
       pointer-events: none;
-      transition: opacity 120ms ease, transform 120ms ease;
+      transition: opacity 140ms ease, transform 140ms ease;
       white-space: normal;
     }
 
@@ -96,50 +138,199 @@
       transform: translateY(0);
     }
 
-    /* “хвостик” облачка */
+    /* хвостик, мы будем переключать классом: top или bottom */
     #tooltip::after{
       content:"";
       position:absolute;
       width: 0; height: 0;
       border: 8px solid transparent;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
+    }
+
+    /* облачко над фразой => хвостик снизу, указывает вниз */
+    #tooltip.pos-top::after{
       border-top-color: var(--bubble-bg);
-      left: 18px;
+      left: var(--arrow-left, 24px);
       bottom: -16px;
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+    }
+
+    /* облачко под фразой => хвостик сверху, указывает вверх */
+    #tooltip.pos-bottom::after{
+      border-bottom-color: var(--bubble-bg);
+      left: var(--arrow-left, 24px);
+      top: -16px;
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <h1>Hover (PC) or tap (phone) a sentence to see the Russian translation</h1>
+    <header>
+      <h1>Read in English, peek in Russian</h1>
+      <p class="sub">On PC hover a sentence, on phone tap it. Tap empty space to close.</p>
+    </header>
 
-    <div class="text" id="text">
-      <p><span class="phrase" data-ru="Мы живем в двенадцатиэтажном здании в центральной части города.">We live in a 12-story building in the central part of the city.</span></p>
-      <p><span class="phrase" data-ru="Позвольте мне рассказать про нашу квартиру.">Let me tell you about our apartment.</span></p>
-      <p><span class="phrase" data-ru="Мы живем на втором этаже, поэтому обычно не пользуемся лифтом.">We live on the second floor, so usually we do not use the elevator.</span></p>
-      <p><span class="phrase" data-ru="В квартире четыре комнаты — комната моих родителей, комната моего младшего брата, комната, где я живу, и гостиная.">There are four rooms in the apartment – my parents’ room, my little brother’s room, the room where I live, and the living room.</span></p>
-      <p><span class="phrase" data-ru="А также, конечно, уютная кухня и ванная.">There are also, of course, a cozy kitchen and a bathroom.</span></p>
-      <p><span class="phrase" data-ru="Кухня — маленькая, но, как я сказал ранее, довольно уютная.">The kitchen is small, but, as I said before, quite cozy.</span></p>
-      <p><span class="phrase" data-ru="Там есть плита, холодильник, чайник, микроволновая печь, стол и стулья.">There is a stove, fridge, kettle, microwave, table and chairs there.</span></p>
-      <p><span class="phrase" data-ru="У нас также есть много кухонных принадлежностей вроде ножей, черпаков и так далее.">We also have a lot of kitchen utensils such as knives, ladles and so on.</span></p>
-      <p><span class="phrase" data-ru="На стене висит портрет моей мамы.">There is my mom’s portrait hanging on the wall.</span></p>
-      <p><span class="phrase" data-ru="Портрет очень хороший, мой отец нарисовал его много лет назад, когда они познакомились.">The portrait is very good, my father drew it many years ago when they met.</span></p>
-      <p><span class="phrase" data-ru="Самая большая комната в квартире — это гостиная.">The biggest room in the apartment is the living room.</span></p>
-      <p><span class="phrase" data-ru="Там мы смотрим телевизор по вечерам, мой младший братик играет там в видеоигры.">This is where we watch TV in the evening, my little brother plays videogames there.</span></p>
-      <p><span class="phrase" data-ru="Комната родителей тоже большая, у них есть свой телевизор.">My parents’ room is also big, and they have their own TV.</span></p>
-      <p><span class="phrase" data-ru="Если мой брат или я хотим посмотреть что-то, что они не смотрят, они могут позволить нам воспользоваться телевизором в гостиной, а сами будут смотреть свой любимый сериал у себя в комнате.">If my brother or I want to watch something they do not watch, they might let us use the living room TV and watch their favorite show in their room.</span></p>
-      <p><span class="phrase" data-ru="Им нравятся детективы про полицию, мне нравятся фэнтези-сериалы, а моему брату — мультики.">They love police procedurals, I like fantasy series, and my brother likes cartoons.</span></p>
-      <p><span class="phrase" data-ru="У моего брата маленькая комната.">My brother has a small room.</span></p>
-      <p><span class="phrase" data-ru="Там есть шкаф, полный игрушек и Лего.">There is a big closet full of toys and Lego there.</span></p>
-      <p><span class="phrase" data-ru="Моя комната тоже небольшая, у меня есть компьютерный стол.">My room is not big either, I have a computer desk.</span></p>
-      <p><span class="phrase" data-ru="Там я делаю уроки.">This is where I do my homework.</span></p>
-      <p><span class="phrase" data-ru="Что касается ванной, то там не просто туалет и ванна, там еще есть кошачий лоток.">As for the bathroom, there is not just a toilet and bathtub, there is also a cat litter box there.</span></p>
-      <p><span class="phrase" data-ru="У нас есть кошка, ее зовут Лили, и у нее нет комнаты, потому что вся квартира — это ее комната.">We have a cat, her name is Lilly, and she does not have a room, because the whole apartment is her room.</span></p>
-      <p><span class="phrase" data-ru="Мы живем в этой квартире с тех пор, как я был маленьким, и мне она очень нравится.">We’ve been living in this apartment since I was little, and I really like it.</span></p>
-      <p><span class="phrase" data-ru="Когда я перееду отсюда когда-нибудь, надеюсь, что я буду жить в квартире похожей на эту.">When I move out someday, I hope I will live in an apartment like this one.</span></p>
+    <div class="card">
+      <div class="text" id="text">
 
-      <div class="hint">Phone: tap a sentence. Tap empty space to hide. PC: hover a sentence.</div>
+<p>
+<span class="phrase" data-ru="Мы">We</span>
+<span class="phrase" data-ru="живём">live</span>
+<span class="phrase" data-ru="в">in</span>
+<span class="phrase" data-ru="одном">a</span>
+<span class="phrase" data-ru="двенадцатиэтажном">12-story</span>
+<span class="phrase" data-ru="здании">building</span>
+<span class="phrase" data-ru="в">in</span>
+<span class="phrase" data-ru="центральной">the central</span>
+<span class="phrase" data-ru="части">part</span>
+<span class="phrase" data-ru="города">of the city</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Позволь">Let</span>
+<span class="phrase" data-ru="мне">me</span>
+<span class="phrase" data-ru="рассказать">tell</span>
+<span class="phrase" data-ru="тебе">you</span>
+<span class="phrase" data-ru="о">about</span>
+<span class="phrase" data-ru="нашей">our</span>
+<span class="phrase" data-ru="квартире">apartment</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Мы">We</span>
+<span class="phrase" data-ru="живём">live</span>
+<span class="phrase" data-ru="на">on</span>
+<span class="phrase" data-ru="втором">the second</span>
+<span class="phrase" data-ru="этаже">floor</span>,
+<span class="phrase" data-ru="поэтому">so</span>
+<span class="phrase" data-ru="обычно">usually</span>
+<span class="phrase" data-ru="мы">we</span>
+<span class="phrase" data-ru="не">do not</span>
+<span class="phrase" data-ru="используем">use</span>
+<span class="phrase" data-ru="лифт">the elevator</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Есть">There are</span>
+<span class="phrase" data-ru="четыре">four</span>
+<span class="phrase" data-ru="комнаты">rooms</span>
+<span class="phrase" data-ru="в">in</span>
+<span class="phrase" data-ru="квартире">the apartment</span> –
+<span class="phrase" data-ru="комната">my parents’</span>
+<span class="phrase" data-ru="родителей">room</span>,
+<span class="phrase" data-ru="комната">my little brother’s</span>
+<span class="phrase" data-ru="младшего брата">room</span>,
+<span class="phrase" data-ru="комната">the room</span>
+<span class="phrase" data-ru="где">where</span>
+<span class="phrase" data-ru="я">I</span>
+<span class="phrase" data-ru="живу">live</span>,
+<span class="phrase" data-ru="и">and</span>
+<span class="phrase" data-ru="гостиная">the living room</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Есть">There are</span>
+<span class="phrase" data-ru="также">also</span>,
+<span class="phrase" data-ru="конечно">of course</span>,
+<span class="phrase" data-ru="уютная">a cozy</span>
+<span class="phrase" data-ru="кухня">kitchen</span>
+<span class="phrase" data-ru="и">and</span>
+<span class="phrase" data-ru="ванная">a bathroom</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Кухня">The kitchen</span>
+<span class="phrase" data-ru="маленькая">is small</span>,
+<span class="phrase" data-ru="но">but</span>,
+<span class="phrase" data-ru="как">as</span>
+<span class="phrase" data-ru="я">I</span>
+<span class="phrase" data-ru="говорил">said</span>
+<span class="phrase" data-ru="раньше">before</span>,
+<span class="phrase" data-ru="довольно">quite</span>
+<span class="phrase" data-ru="уютная">cozy</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Там">There</span>
+<span class="phrase" data-ru="есть">is</span>
+<span class="phrase" data-ru="плита">a stove</span>,
+<span class="phrase" data-ru="холодильник">fridge</span>,
+<span class="phrase" data-ru="чайник">kettle</span>,
+<span class="phrase" data-ru="микроволновка">microwave</span>,
+<span class="phrase" data-ru="стол">table</span>
+<span class="phrase" data-ru="и">and</span>
+<span class="phrase" data-ru="стулья">chairs</span>
+<span class="phrase" data-ru="там">there</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Мы">We</span>
+<span class="phrase" data-ru="также">also</span>
+<span class="phrase" data-ru="имеем">have</span>
+<span class="phrase" data-ru="много">a lot of</span>
+<span class="phrase" data-ru="кухонных">kitchen</span>
+<span class="phrase" data-ru="принадлежностей">utensils</span>
+<span class="phrase" data-ru="таких как">such as</span>
+<span class="phrase" data-ru="ножи">knives</span>,
+<span class="phrase" data-ru="черпаки">ladles</span>
+<span class="phrase" data-ru="и">and</span>
+<span class="phrase" data-ru="так далее">so on</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Есть">There is</span>
+<span class="phrase" data-ru="портрет">my mom’s portrait</span>
+<span class="phrase" data-ru="висящий">hanging</span>
+<span class="phrase" data-ru="на">on</span>
+<span class="phrase" data-ru="стене">the wall</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Портрет">The portrait</span>
+<span class="phrase" data-ru="очень">is very</span>
+<span class="phrase" data-ru="хороший">good</span>,
+<span class="phrase" data-ru="мой">my</span>
+<span class="phrase" data-ru="отец">father</span>
+<span class="phrase" data-ru="нарисовал">drew</span>
+<span class="phrase" data-ru="его">it</span>
+<span class="phrase" data-ru="много">many</span>
+<span class="phrase" data-ru="лет">years</span>
+<span class="phrase" data-ru="назад">ago</span>
+<span class="phrase" data-ru="когда">when</span>
+<span class="phrase" data-ru="они">they</span>
+<span class="phrase" data-ru="познакомились">met</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Самая">The biggest</span>
+<span class="phrase" data-ru="комната">room</span>
+<span class="phrase" data-ru="в">in</span>
+<span class="phrase" data-ru="квартире">the apartment</span>
+<span class="phrase" data-ru="это">is</span>
+<span class="phrase" data-ru="гостиная">the living room</span>.
+</p>
+
+<p>
+<span class="phrase" data-ru="Здесь">This</span>
+<span class="phrase" data-ru="это">is</span>
+<span class="phrase" data-ru="где">where</span>
+<span class="phrase" data-ru="мы">we</span>
+<span class="phrase" data-ru="смотрим">watch</span>
+<span class="phrase" data-ru="телевизор">TV</span>
+<span class="phrase" data-ru="по вечерам">in the evening</span>,
+<span class="phrase" data-ru="мой">my</span>
+<span class="phrase" data-ru="младший брат">little brother</span>
+<span class="phrase" data-ru="играет">plays</span>
+<span class="phrase" data-ru="в">in</span>
+<span class="phrase" data-ru="видеоигры">videogames</span>
+<span class="phrase" data-ru="там">there</span>.
+</p>
+
+</div>
+
+
+        <div class="hint">Tip: if you use a phone, tap the sentence again to close it.</div>
+      </div>
     </div>
   </div>
 
@@ -148,11 +339,14 @@
   <script>
     const tooltip = document.getElementById("tooltip");
     const phrases = Array.from(document.querySelectorAll(".phrase"));
+    const PAD = 14;          // отступ от краёв экрана
+    const GAP = 12;          // зазор между фразой и облаком
+    const ARROW_PAD = 18;    // хвостик не ближе этого к краю облака
 
     function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
     function hideTooltip(){
-      tooltip.classList.remove("show");
+      tooltip.classList.remove("show", "pos-top", "pos-bottom");
       tooltip.setAttribute("aria-hidden", "true");
       phrases.forEach(p => p.classList.remove("is-active"));
     }
@@ -165,44 +359,54 @@
       tooltip.classList.add("show");
       tooltip.setAttribute("aria-hidden", "false");
 
-      // позиционирование (фиксированное относительно окна)
+      // измеряем
       const r = el.getBoundingClientRect();
-
-      // сначала поставим “примерно” сверху по центру
-      // потом “подожмём” чтобы не вылезало за края
-      const pad = 10;
-
-      // временно сделаем видимым, чтобы измерить размеры
-      // (оно уже show, значит размеры будут)
       const tw = tooltip.offsetWidth;
       const th = tooltip.offsetHeight;
 
-      // хотим по центру над фразой
+      // предпочитаем сверху, но если места нет, уйдём вниз
+      const spaceAbove = r.top;
+      const spaceBelow = window.innerHeight - r.bottom;
+
+      let place = "top";
+      if (spaceAbove < th + GAP + PAD && spaceBelow > spaceAbove) place = "bottom";
+
+      tooltip.classList.remove("pos-top", "pos-bottom");
+      tooltip.classList.add(place === "top" ? "pos-top" : "pos-bottom");
+
+      // позиционирование X: по центру фразы, но не вылезать за экран
       let x = r.left + (r.width / 2) - (tw / 2);
-      let y = r.top - th - 14; // 14px зазор + хвостик
+      x = clamp(x, PAD, window.innerWidth - tw - PAD);
 
-      // если сверху не помещается, показываем снизу
-      if (y < pad) {
-        y = r.bottom + 14;
-        // хвостик по умолчанию снизу облачка (направлен вниз),
-        // для нижнего варианта его не переворачиваем, это не критично визуально.
+      // позиционирование Y: сверху или снизу
+      let y;
+      if (place === "top"){
+        y = r.top - th - GAP;
+        if (y < PAD) y = PAD; // на всякий
+      } else {
+        y = r.bottom + GAP;
+        if (y + th > window.innerHeight - PAD) y = window.innerHeight - th - PAD;
       }
-
-      x = clamp(x, pad, window.innerWidth - tw - pad);
-      y = clamp(y, pad, window.innerHeight - th - pad);
 
       tooltip.style.left = x + "px";
       tooltip.style.top  = y + "px";
+
+      // хвостик: вычислим положение относительно облака,
+      // чтобы он указывал на центр фразы и не уходил за край
+      const targetX = r.left + r.width / 2; // где находится фраза в окне
+      let arrowLeft = targetX - x;          // где это внутри облака
+      arrowLeft = clamp(arrowLeft, ARROW_PAD, tw - ARROW_PAD);
+      tooltip.style.setProperty("--arrow-left", arrowLeft + "px");
     }
 
-    // ПК: hover
+    // PC hover
     phrases.forEach(el => {
       el.addEventListener("mouseenter", () => showTooltipFor(el));
       el.addEventListener("mousemove",  () => showTooltipFor(el));
       el.addEventListener("mouseleave", () => hideTooltip());
     });
 
-    // Телефон/планшет: tap
+    // Tap / click
     phrases.forEach(el => {
       el.addEventListener("click", (e) => {
         const isActive = el.classList.contains("is-active");
@@ -215,12 +419,13 @@
       });
     });
 
-    // тап по пустому месту = закрыть
     document.addEventListener("click", () => hideTooltip());
+
+    // При скролле и ресайзе лучше закрывать, чтобы не “плавало”
     window.addEventListener("scroll", () => {
-      // чтобы облако не “зависало” при прокрутке
       if (tooltip.classList.contains("show")) hideTooltip();
     }, {passive:true});
+
     window.addEventListener("resize", () => {
       if (tooltip.classList.contains("show")) hideTooltip();
     });
